@@ -13,7 +13,7 @@ import tableauserverclient as TSC
 
 GITHUB_API_URL = "https://api.github.com"
 GITHUB_ORG = "devin-pilot-repos"
-GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
+GITHUB_TOKEN = os.environ.get("ORG_ACCESS_TOKEN") or os.environ.get("GITHUB_TOKEN")
 
 TABLEAU_SERVER_URL = os.environ.get("TABLEAU_SERVER_URL")
 TABLEAU_USERNAME = os.environ.get("TABLEAU_USERNAME")

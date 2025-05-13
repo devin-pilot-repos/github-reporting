@@ -28,6 +28,7 @@ jobs:
         run: python scripts/generate_member_report.py
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ORG_ACCESS_TOKEN: ${{ secrets.ORG_ACCESS_TOKEN }}
           TABLEAU_SERVER_URL: ${{ secrets.TABLEAU_SERVER_URL }}
           TABLEAU_USERNAME: ${{ secrets.TABLEAU_USERNAME }}
           TABLEAU_PASSWORD: ${{ secrets.TABLEAU_PASSWORD }}
