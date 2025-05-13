@@ -36,7 +36,7 @@ jobs:
           TABLEAU_DATASOURCE_NAME: ${{ secrets.TABLEAU_DATASOURCE_NAME }}
 
       - name: Upload CSV as artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: github-org-member-report
           path: member_report.csv
