@@ -115,17 +115,28 @@ def generate_csv_report():
     return report_data
 
 def push_to_tableau(data):
-    """Push the CSV data to Tableau as a datasource."""
+    """Push the CSV data to Tableau as a datasource.
+    
+    Uses the Tableau Server Client Python library to publish a CSV file
+    as a datasource to a Tableau server.
+    """
     if not all([TABLEAU_SERVER_URL, TABLEAU_USERNAME, TABLEAU_PASSWORD, 
                 TABLEAU_PROJECT, TABLEAU_DATASOURCE_NAME]):
         print("Tableau configuration incomplete. Skipping Tableau upload.")
         return False
     
+    temp_file = "temp_tableau_upload.csv"
+    
     try:
+        df = pd.DataFrame(data)
+        df.to_csv(temp_file, index=False)
+        
         tableau_auth = TSC.TableauAuth(TABLEAU_USERNAME, TABLEAU_PASSWORD, TABLEAU_SITE)
         server = TSC.Server(TABLEAU_SERVER_URL)
         
         with server.auth.sign_in(tableau_auth):
+            print("Successfully authenticated with Tableau Server")
+            
             all_projects, pagination_item = server.projects.get()
             project = next((p for p in all_projects if p.name == TABLEAU_PROJECT), None)
             
@@ -133,13 +144,12 @@ def push_to_tableau(data):
                 print(f"Project '{TABLEAU_PROJECT}' not found")
                 return False
             
+            print(f"Found project: {project.name} (ID: {project.id})")
+            
             datasource = TSC.DatasourceItem(project.id)
             datasource.name = TABLEAU_DATASOURCE_NAME
             
-            df = pd.DataFrame(data)
-            
-            temp_file = "temp_tableau_upload.csv"
-            df.to_csv(temp_file, index=False)
+            print(f"Publishing CSV datasource '{datasource.name}' to project '{project.name}'")
             
             datasource = server.datasources.publish(
                 datasource,
@@ -147,14 +157,16 @@ def push_to_tableau(data):
                 TSC.Server.PublishMode.Overwrite
             )
             
-            os.remove(temp_file)
-            
-            print(f"Successfully published datasource to Tableau: {datasource.name}")
+            print(f"Successfully published datasource to Tableau: {datasource.name} (ID: {datasource.id})")
             return True
             
     except Exception as e:
         print(f"Error publishing to Tableau: {str(e)}")
         return False
+    finally:
+        if os.path.exists(temp_file):
+            os.remove(temp_file)
+            print(f"Removed temporary file: {temp_file}")
 
 def main():
     """Main function to generate report and push to Tableau."""
