@@ -15,16 +15,9 @@ The workflow runs:
 ### Generated Report
 
 The CSV report includes the following information for each organization member:
-- GitHub account ID
 - Login (username)
 - Email address (if public)
-- Full name (if available)
 - Date of last activity
-- Account creation date
-- Account last update date
-- Account type
-- Company (if provided)
-- Location (if provided)
 
 ### Tableau Integration
 

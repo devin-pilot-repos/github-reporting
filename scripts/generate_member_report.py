@@ -100,23 +100,13 @@ def generate_csv_report():
         
         if user_details:
             report_data.append({
-                "account_id": user_details.get("id"),
                 "login": username,
                 "email": user_details.get("email", ""),
-                "name": user_details.get("name", ""),
-                "last_activity_date": last_activity or "",
-                "created_at": user_details.get("created_at", ""),
-                "updated_at": user_details.get("updated_at", ""),
-                "type": user_details.get("type", ""),
-                "company": user_details.get("company", ""),
-                "location": user_details.get("location", "")
+                "last_activity_date": last_activity or ""
             })
     
     with open(OUTPUT_FILE, "w", newline="") as csvfile:
-        fieldnames = [
-            "account_id", "login", "email", "name", "last_activity_date",
-            "created_at", "updated_at", "type", "company", "location"
-        ]
+        fieldnames = ["login", "email", "last_activity_date"]
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(report_data)
