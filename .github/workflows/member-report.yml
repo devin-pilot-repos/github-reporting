@@ -8,7 +8,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  generate-report:
+  generate-csv:
+    name: Generate CSV Report
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -22,19 +23,13 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install requests pandas tableauserverclient
+          pip install requests pandas
 
       - name: Generate member report
-        run: python scripts/generate_member_report.py
+        run: python scripts/generate_member_report.py --generate-csv
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ORG_ACCESS_TOKEN: ${{ secrets.ORG_ACCESS_TOKEN }}
-          TABLEAU_SERVER_URL: ${{ secrets.TABLEAU_SERVER_URL }}
-          TABLEAU_USERNAME: ${{ secrets.TABLEAU_USERNAME }}
-          TABLEAU_PASSWORD: ${{ secrets.TABLEAU_PASSWORD }}
-          TABLEAU_SITE: ${{ secrets.TABLEAU_SITE }}
-          TABLEAU_PROJECT: ${{ secrets.TABLEAU_PROJECT }}
-          TABLEAU_DATASOURCE_NAME: ${{ secrets.TABLEAU_DATASOURCE_NAME }}
 
       - name: Upload CSV as artifact
         uses: actions/upload-artifact@v4
@@ -42,3 +37,36 @@ jobs:
           name: github-org-member-report
           path: member_report.csv
           retention-days: 90
+
+  update-tableau:
+    name: Update Tableau Dataset
+    needs: generate-csv
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas tableauserverclient
+
+      - name: Download CSV artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: github-org-member-report
+
+      - name: Push to Tableau
+        run: python scripts/generate_member_report.py --push-to-tableau
+        env:
+          TABLEAU_SERVER_URL: ${{ secrets.TABLEAU_SERVER_URL }}
+          TABLEAU_USERNAME: ${{ secrets.TABLEAU_USERNAME }}
+          TABLEAU_PASSWORD: ${{ secrets.TABLEAU_PASSWORD }}
+          TABLEAU_SITE: ${{ secrets.TABLEAU_SITE }}
+          TABLEAU_PROJECT: ${{ secrets.TABLEAU_PROJECT }}
+          TABLEAU_DATASOURCE_NAME: ${{ secrets.TABLEAU_DATASOURCE_NAME }}

@@ -223,13 +223,42 @@ def push_to_tableau(data):
 
 def main():
     """Main function to generate report and push to Tableau."""
-    if not GITHUB_TOKEN:
-        print("GITHUB_TOKEN environment variable is required")
-        sys.exit(1)
+    import argparse
     
-    data = generate_csv_report()
+    parser = argparse.ArgumentParser(description='Generate GitHub organization member report')
+    parser.add_argument('--generate-csv', action='store_true', help='Generate CSV report only')
+    parser.add_argument('--push-to-tableau', action='store_true', help='Push existing CSV to Tableau')
+    args = parser.parse_args()
     
-    if any([TABLEAU_SERVER_URL, TABLEAU_USERNAME, TABLEAU_PASSWORD]):
+    do_generate_csv = True
+    do_push_to_tableau = True
+    
+    if args.generate_csv or args.push_to_tableau:
+        do_generate_csv = args.generate_csv
+        do_push_to_tableau = args.push_to_tableau
+    
+    data = None
+    
+    if do_generate_csv:
+        if not GITHUB_TOKEN:
+            print("GITHUB_TOKEN or ORG_ACCESS_TOKEN environment variable is required")
+            sys.exit(1)
+        
+        data = generate_csv_report()
+    
+    if do_push_to_tableau:
+        if not all([TABLEAU_SERVER_URL, TABLEAU_USERNAME, TABLEAU_PASSWORD]):
+            print("Tableau configuration incomplete. Skipping Tableau upload.")
+            return
+        
+        if data is None:
+            try:
+                data = pd.read_csv(OUTPUT_FILE).to_dict('records')
+                print(f"Loaded existing CSV report: {OUTPUT_FILE}")
+            except Exception as e:
+                print(f"Error loading CSV file: {str(e)}")
+                sys.exit(1)
+        
         push_to_tableau(data)
 
 if __name__ == "__main__":
