@@ -43,12 +43,51 @@ The workflow uses the built-in `GITHUB_TOKEN` to authenticate with the GitHub AP
 
 ### Local Testing
 
-To test the script locally:
+#### Testing CSV Generation
+
+To test the CSV generation script locally:
 
 1. Clone this repository
-2. Install dependencies: `pip install requests pandas tableauserverclient`
-3. Set the required environment variables
-4. Run the script: `python scripts/generate_member_report.py`
+2. Install dependencies: `pip install requests pandas`
+3. Set the required environment variables:
+   ```bash
+   export GITHUB_TOKEN=your_github_token  # or ORG_ACCESS_TOKEN
+   ```
+4. Run the script: `python scripts/generate_csv_report.py`
+
+#### Testing Tableau Integration
+
+To test the Tableau integration script locally:
+
+1. First generate a CSV report using the steps above or create a sample CSV with the following columns:
+   ```csv
+   login,email,last_activity_date
+   user1,user1@example.com,2025-05-01T12:00:00Z
+   user2,user2@example.com,2025-05-02T12:00:00Z
+   ```
+
+2. Install the required dependencies:
+   ```bash
+   pip install pandas tableauserverclient
+   ```
+
+3. Set the required environment variables:
+   ```bash
+   export TABLEAU_SERVER_URL=https://your-tableau-server.com
+   export TABLEAU_USERNAME=your_username
+   export TABLEAU_PASSWORD=your_password
+   export TABLEAU_SITE=your_site  # Optional
+   export TABLEAU_PROJECT=your_project
+   export TABLEAU_DATASOURCE_NAME=github_members
+   ```
+
+4. Run the script: `python scripts/update_tableau.py`
+
+5. Troubleshooting:
+   - Ensure your Tableau server is accessible from your local machine
+   - Verify your credentials have permission to publish datasources
+   - Check that the specified project exists in your Tableau site
+   - If you encounter SSL errors, you may need to set `export PYTHONHTTPSVERIFY=0` (not recommended for production)
 
 ## License
 
