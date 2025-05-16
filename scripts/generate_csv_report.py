@@ -1,26 +1,16 @@
 """
-Script to generate a CSV report of GitHub organization members and push to Tableau.
+Script to generate a CSV report of GitHub organization members.
 """
 
 import os
 import sys
 import csv
-import json
 import datetime
 import requests
-import pandas as pd
-import tableauserverclient as TSC
 
 GITHUB_API_URL = "https://api.github.com"
 GITHUB_ORG = "devin-pilot-repos"
 GITHUB_TOKEN = os.environ.get("ORG_ACCESS_TOKEN") or os.environ.get("GITHUB_TOKEN")
-
-TABLEAU_SERVER_URL = os.environ.get("TABLEAU_SERVER_URL")
-TABLEAU_USERNAME = os.environ.get("TABLEAU_USERNAME")
-TABLEAU_PASSWORD = os.environ.get("TABLEAU_PASSWORD")
-TABLEAU_SITE = os.environ.get("TABLEAU_SITE", "")
-TABLEAU_PROJECT = os.environ.get("TABLEAU_PROJECT")
-TABLEAU_DATASOURCE_NAME = os.environ.get("TABLEAU_DATASOURCE_NAME")
 
 OUTPUT_FILE = "member_report.csv"
 
@@ -167,99 +157,14 @@ def generate_csv_report():
     print(f"CSV report generated: {OUTPUT_FILE}")
     return report_data
 
-def push_to_tableau(data):
-    """Push the CSV data to Tableau as a datasource.
-    
-    Uses the Tableau Server Client Python library to publish a CSV file
-    as a datasource to a Tableau server.
-    """
-    if not all([TABLEAU_SERVER_URL, TABLEAU_USERNAME, TABLEAU_PASSWORD, 
-                TABLEAU_PROJECT, TABLEAU_DATASOURCE_NAME]):
-        print("Tableau configuration incomplete. Skipping Tableau upload.")
-        return False
-    
-    temp_file = "temp_tableau_upload.csv"
-    
-    try:
-        df = pd.DataFrame(data)
-        df.to_csv(temp_file, index=False)
-        
-        tableau_auth = TSC.TableauAuth(TABLEAU_USERNAME, TABLEAU_PASSWORD, TABLEAU_SITE)
-        server = TSC.Server(TABLEAU_SERVER_URL)
-        
-        with server.auth.sign_in(tableau_auth):
-            print("Successfully authenticated with Tableau Server")
-            
-            all_projects, pagination_item = server.projects.get()
-            project = next((p for p in all_projects if p.name == TABLEAU_PROJECT), None)
-            
-            if not project:
-                print(f"Project '{TABLEAU_PROJECT}' not found")
-                return False
-            
-            print(f"Found project: {project.name} (ID: {project.id})")
-            
-            datasource = TSC.DatasourceItem(project.id)
-            datasource.name = TABLEAU_DATASOURCE_NAME
-            
-            print(f"Publishing CSV datasource '{datasource.name}' to project '{project.name}'")
-            
-            datasource = server.datasources.publish(
-                datasource,
-                temp_file,
-                TSC.Server.PublishMode.Overwrite
-            )
-            
-            print(f"Successfully published datasource to Tableau: {datasource.name} (ID: {datasource.id})")
-            return True
-            
-    except Exception as e:
-        print(f"Error publishing to Tableau: {str(e)}")
-        return False
-    finally:
-        if os.path.exists(temp_file):
-            os.remove(temp_file)
-            print(f"Removed temporary file: {temp_file}")
-
 def main():
-    """Main function to generate report and push to Tableau."""
-    import argparse
+    """Main function to generate CSV report."""
+    if not GITHUB_TOKEN:
+        print("GITHUB_TOKEN or ORG_ACCESS_TOKEN environment variable is required")
+        sys.exit(1)
     
-    parser = argparse.ArgumentParser(description='Generate GitHub organization member report')
-    parser.add_argument('--generate-csv', action='store_true', help='Generate CSV report only')
-    parser.add_argument('--push-to-tableau', action='store_true', help='Push existing CSV to Tableau')
-    args = parser.parse_args()
-    
-    do_generate_csv = True
-    do_push_to_tableau = True
-    
-    if args.generate_csv or args.push_to_tableau:
-        do_generate_csv = args.generate_csv
-        do_push_to_tableau = args.push_to_tableau
-    
-    data = None
-    
-    if do_generate_csv:
-        if not GITHUB_TOKEN:
-            print("GITHUB_TOKEN or ORG_ACCESS_TOKEN environment variable is required")
-            sys.exit(1)
-        
-        data = generate_csv_report()
-    
-    if do_push_to_tableau:
-        if not all([TABLEAU_SERVER_URL, TABLEAU_USERNAME, TABLEAU_PASSWORD]):
-            print("Tableau configuration incomplete. Skipping Tableau upload.")
-            return
-        
-        if data is None:
-            try:
-                data = pd.read_csv(OUTPUT_FILE).to_dict('records')
-                print(f"Loaded existing CSV report: {OUTPUT_FILE}")
-            except Exception as e:
-                print(f"Error loading CSV file: {str(e)}")
-                sys.exit(1)
-        
-        push_to_tableau(data)
+    generate_csv_report()
+    print(f"CSV report successfully generated at: {OUTPUT_FILE}")
 
 if __name__ == "__main__":
     main()
