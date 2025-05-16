@@ -39,7 +39,11 @@ The workflow uses the built-in `GITHUB_TOKEN` to authenticate with the GitHub AP
 ### Prerequisites
 
 - Python 3.10+
-- Required Python packages: `requests`, `pandas`, `tableauserverclient`
+- Required Python packages: 
+  - `requests` - For GitHub API calls
+  - `pandas` - For data manipulation
+  - `tableauserverclient` - For Tableau Server integration
+  - `tableauhyperapi` - For converting CSV to Hyper format
 
 ### Local Testing
 
@@ -97,7 +101,7 @@ To test the Tableau integration script locally:
 
 3. Install required dependencies:
    ```bash
-   pip install pandas tableauserverclient
+   pip install pandas tableauserverclient tableauhyperapi
    ```
 
 4. Set the required environment variables:
